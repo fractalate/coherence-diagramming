@@ -4,7 +4,7 @@ A basic, local-only diagramming tool.
 
 ## Usage
 
-Just serve the files! E.g.
+Just serve the files! For example:
 
 ```bash
 python3 -m http.server

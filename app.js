@@ -54,7 +54,7 @@ let lastShapeClick = { id: null, time: 0 };
 let activeColorTarget = "fill";
 
 const paletteColors = [
-  "#ffffff", "#f8fafc", "#e5e7eb", "#9ca3af", "#4b5563", "#111827", "#000000", "#7f1d1d",
+  "#ffffff", "#f8fafc", "#e5e7eb", "#9ca3af", "#6b7280", "#4b5563", "#111827", "#000000",
   "#fee2e2", "#fecaca", "#f87171", "#ef4444", "#dc2626", "#991b1b", "#7f1d1d", "#450a0a",
   "#ffedd5", "#fed7aa", "#fb923c", "#f97316", "#ea580c", "#c2410c", "#9a3412", "#431407",
   "#fef3c7", "#fde68a", "#facc15", "#eab308", "#ca8a04", "#a16207", "#854d0e", "#422006",
