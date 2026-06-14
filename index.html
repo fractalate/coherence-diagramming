@@ -47,18 +47,26 @@
 
         <section class="properties">
           <h2>Style</h2>
-          <label>
-            Fill
-            <input id="fillColor" type="color" value="#ffffff">
-          </label>
-          <label>
-            Stroke
-            <input id="strokeColor" type="color" value="#2563eb">
-          </label>
-          <label>
-            Text
-            <input id="textColor" type="color" value="#111827">
-          </label>
+          <div class="color-tabs" role="group" aria-label="Color target">
+            <button id="fillColorTab" class="color-tab active" type="button" data-color-target="fill">Fill</button>
+            <button id="strokeColorTab" class="color-tab" type="button" data-color-target="stroke">Stroke</button>
+            <button id="textColorTab" class="color-tab" type="button" data-color-target="text">Text</button>
+          </div>
+          <div class="color-picker">
+            <div id="activeColorPreview" class="active-color-preview" aria-hidden="true"></div>
+            <div>
+              <div id="colorGrid" class="color-grid" aria-label="Color palette"></div>
+              <div class="system-color-row">
+                <span id="activeColorLabel">#ffffff</span>
+                <label class="system-color-button">
+                  System
+                  <input id="fillColor" type="color" value="#ffffff">
+                  <input id="strokeColor" type="color" value="#2563eb">
+                  <input id="textColor" type="color" value="#111827">
+                </label>
+              </div>
+            </div>
+          </div>
           <label>
             Stroke width
             <input id="strokeWidth" type="range" min="1" max="12" value="2">

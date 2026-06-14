@@ -16,6 +16,9 @@ const els = {
   strokeWidthValue: document.getElementById("strokeWidthValue"),
   fontSize: document.getElementById("fontSize"),
   fontSizeValue: document.getElementById("fontSizeValue"),
+  colorGrid: document.getElementById("colorGrid"),
+  activeColorPreview: document.getElementById("activeColorPreview"),
+  activeColorLabel: document.getElementById("activeColorLabel"),
   arrowStart: document.getElementById("arrowStart"),
   arrowEnd: document.getElementById("arrowEnd"),
   selectionInfo: document.getElementById("selectionInfo"),
@@ -48,6 +51,20 @@ let spaceDown = false;
 let draftConnection = null;
 let editingShapeId = null;
 let lastShapeClick = { id: null, time: 0 };
+let activeColorTarget = "fill";
+
+const paletteColors = [
+  "#ffffff", "#f8fafc", "#e5e7eb", "#9ca3af", "#4b5563", "#111827", "#000000", "#7f1d1d",
+  "#fee2e2", "#fecaca", "#f87171", "#ef4444", "#dc2626", "#991b1b", "#7f1d1d", "#450a0a",
+  "#ffedd5", "#fed7aa", "#fb923c", "#f97316", "#ea580c", "#c2410c", "#9a3412", "#431407",
+  "#fef3c7", "#fde68a", "#facc15", "#eab308", "#ca8a04", "#a16207", "#854d0e", "#422006",
+  "#dcfce7", "#bbf7d0", "#4ade80", "#22c55e", "#16a34a", "#15803d", "#166534", "#052e16",
+  "#d1fae5", "#a7f3d0", "#34d399", "#10b981", "#059669", "#047857", "#065f46", "#022c22",
+  "#cffafe", "#a5f3fc", "#22d3ee", "#06b6d4", "#0891b2", "#0e7490", "#155e75", "#083344",
+  "#dbeafe", "#bfdbfe", "#60a5fa", "#3b82f6", "#2563eb", "#1d4ed8", "#1e40af", "#172554",
+  "#ede9fe", "#ddd6fe", "#a78bfa", "#8b5cf6", "#7c3aed", "#6d28d9", "#5b21b6", "#2e1065",
+  "#fce7f3", "#fbcfe8", "#f472b6", "#ec4899", "#db2777", "#be185d", "#9d174d", "#500724",
+];
 
 function uid(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -95,6 +112,64 @@ function setTool(nextTool) {
   els.workspace.dataset.tool = tool;
   cancelDraftConnection();
   render();
+}
+
+function currentColorValue() {
+  if (activeColorTarget === "fill") return els.fillColor.value;
+  if (activeColorTarget === "stroke") return els.strokeColor.value;
+  return els.textColor.value;
+}
+
+function setActiveColorTarget(target) {
+  activeColorTarget = target;
+  document.querySelectorAll(".color-tab").forEach((button) => {
+    button.classList.toggle("active", button.dataset.colorTarget === activeColorTarget);
+  });
+  [els.fillColor, els.strokeColor, els.textColor].forEach((input) => {
+    input.classList.remove("active-system-color");
+  });
+  colorInputForTarget(activeColorTarget).classList.add("active-system-color");
+  renderPaletteState();
+}
+
+function colorInputForTarget(target) {
+  if (target === "fill") return els.fillColor;
+  if (target === "stroke") return els.strokeColor;
+  return els.textColor;
+}
+
+function patchForColorTarget(target, color) {
+  if (target === "fill") return { fill: color };
+  if (target === "stroke") return { stroke: color };
+  return { text: color };
+}
+
+function applyColor(target, color) {
+  colorInputForTarget(target).value = color;
+  updateSelectedStyle(patchForColorTarget(target, color));
+  renderPaletteState();
+}
+
+function renderPalette() {
+  els.colorGrid.replaceChildren(...paletteColors.map((color) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "swatch";
+    button.dataset.color = color;
+    button.title = color;
+    button.style.background = color;
+    return button;
+  }));
+  renderPaletteState();
+}
+
+function renderPaletteState() {
+  const color = currentColorValue();
+  els.activeColorPreview.style.background = color;
+  els.activeColorLabel.textContent = color.toUpperCase();
+  els.colorGrid.querySelectorAll(".swatch").forEach((button) => {
+    button.classList.toggle("active", button.dataset.color.toLowerCase() === color.toLowerCase());
+  });
 }
 
 function screenToWorld(clientX, clientY) {
@@ -161,18 +236,46 @@ function render() {
 
 function renderDocs() {
   els.docList.replaceChildren(...docs.map((doc) => {
+    const row = document.createElement("div");
+    row.className = "doc-row";
+    row.classList.toggle("active", doc.id === activeDocId);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "doc-item";
-    button.classList.toggle("active", doc.id === activeDocId);
     button.dataset.docId = doc.id;
     const title = document.createElement("span");
     title.textContent = doc.title || "Untitled diagram";
     const count = document.createElement("small");
     count.textContent = `${doc.shapes.length} items`;
     button.append(title, count);
-    return button;
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "doc-delete";
+    deleteButton.dataset.deleteDocId = doc.id;
+    deleteButton.title = "Delete document";
+    deleteButton.setAttribute("aria-label", `Delete ${doc.title || "Untitled diagram"}`);
+    deleteButton.textContent = "x";
+    row.append(button, deleteButton);
+    return row;
   }));
+}
+
+function deleteDocument(docId) {
+  const doc = docs.find((candidate) => candidate.id === docId);
+  if (!doc) return;
+  const title = doc.title || "Untitled diagram";
+  if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
+  docs = docs.filter((candidate) => candidate.id !== docId);
+  if (!docs.length) {
+    activeDocId = createDocument("Untitled diagram").id;
+  } else if (activeDocId === docId) {
+    activeDocId = docs[0].id;
+  }
+  selected = null;
+  selectedShapeIds = [];
+  editingShapeId = null;
+  saveDocs();
+  render();
 }
 
 function renderShapes() {
@@ -463,6 +566,7 @@ function syncStyleControls() {
   const connection = selected?.type === "connection" ? findConnection(selected.id) : null;
   els.arrowStart.checked = connection ? connectionHasArrow(connection, "start") : Boolean(defaultStyle.arrowStart);
   els.arrowEnd.checked = connection ? connectionHasArrow(connection, "end") : defaultStyle.arrowEnd !== false;
+  renderPaletteState();
 }
 
 function renderSelectionInfo() {
@@ -950,6 +1054,16 @@ document.querySelectorAll(".tool").forEach((button) => {
   button.addEventListener("click", () => setTool(button.dataset.tool));
 });
 
+document.querySelectorAll(".color-tab").forEach((button) => {
+  button.addEventListener("click", () => setActiveColorTarget(button.dataset.colorTarget));
+});
+
+els.colorGrid.addEventListener("click", (event) => {
+  const swatch = event.target.closest(".swatch");
+  if (!swatch) return;
+  applyColor(activeColorTarget, swatch.dataset.color);
+});
+
 els.workspace.addEventListener("pointerdown", onPointerDown);
 els.workspace.addEventListener("pointermove", onPointerMove);
 els.workspace.addEventListener("pointerup", onPointerUp);
@@ -970,6 +1084,11 @@ els.docTitle.addEventListener("input", () => {
 });
 
 els.docList.addEventListener("click", (event) => {
+  const deleteButton = event.target.closest("[data-delete-doc-id]");
+  if (deleteButton) {
+    deleteDocument(deleteButton.dataset.deleteDocId);
+    return;
+  }
   const button = event.target.closest(".doc-item");
   if (!button) return;
   commitTextEditor();
@@ -1009,9 +1128,9 @@ els.importInput.addEventListener("change", () => {
 
 els.deleteBtn.addEventListener("click", deleteSelected);
 els.shapeTextInput.addEventListener("input", () => updateSelectedShapeText(els.shapeTextInput.value));
-els.fillColor.addEventListener("input", () => updateSelectedStyle({ fill: els.fillColor.value }));
-els.strokeColor.addEventListener("input", () => updateSelectedStyle({ stroke: els.strokeColor.value }));
-els.textColor.addEventListener("input", () => updateSelectedStyle({ text: els.textColor.value }));
+els.fillColor.addEventListener("input", () => applyColor("fill", els.fillColor.value));
+els.strokeColor.addEventListener("input", () => applyColor("stroke", els.strokeColor.value));
+els.textColor.addEventListener("input", () => applyColor("text", els.textColor.value));
 els.strokeWidth.addEventListener("input", () => updateSelectedStyle({ strokeWidth: Number(els.strokeWidth.value) }));
 els.fontSize.addEventListener("input", () => updateSelectedStyle({ fontSize: Number(els.fontSize.value) }));
 els.arrowStart.addEventListener("change", () => updateArrowStyle({ arrowStart: els.arrowStart.checked }));
@@ -1041,4 +1160,6 @@ window.addEventListener("keyup", (event) => {
 
 window.addEventListener("resize", render);
 
+renderPalette();
+setActiveColorTarget("fill");
 render();

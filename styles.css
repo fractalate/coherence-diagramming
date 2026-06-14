@@ -156,6 +156,18 @@ h2 {
   gap: 7px;
 }
 
+.doc-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  gap: 6px;
+}
+
+.doc-row.active .doc-item {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: #1d4ed8;
+}
+
 .doc-item {
   display: flex;
   align-items: center;
@@ -163,6 +175,12 @@ h2 {
   gap: 8px;
   width: 100%;
   text-align: left;
+}
+
+.doc-delete {
+  min-height: 34px;
+  padding: 0;
+  color: var(--danger);
 }
 
 .doc-item span {
@@ -185,6 +203,90 @@ h2 {
 .properties {
   display: grid;
   gap: 10px;
+}
+
+.color-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.color-tab {
+  min-height: 30px;
+  padding: 5px 8px;
+  box-shadow: none;
+}
+
+.color-picker {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.active-color-preview {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+
+.swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 22px;
+  padding: 0;
+  border: 1px solid rgba(17, 24, 39, 0.18);
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+.swatch.active {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.system-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.system-color-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.system-color-button input {
+  position: absolute;
+  inset: 0;
+  display: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.system-color-button input.active-system-color {
+  display: block;
 }
 
 .properties label {
