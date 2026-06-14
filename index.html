@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Coherence Diagramming</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">CD</span>
+          <input id="docTitle" class="doc-title" aria-label="Document title" value="Untitled diagram">
+        </div>
+        <div class="doc-actions">
+          <button id="newDocBtn" type="button">New</button>
+          <button id="duplicateDocBtn" type="button">Duplicate</button>
+          <button id="exportBtn" type="button">Export JSON</button>
+          <button id="exportSvgBtn" type="button">Export SVG</button>
+          <button id="exportPngBtn" type="button">Export PNG</button>
+          <label class="file-button">
+            Import
+            <input id="importInput" type="file" accept="application/json,.json">
+          </label>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <section>
+          <h2>Documents</h2>
+          <div id="docList" class="doc-list"></div>
+        </section>
+
+        <section>
+          <h2>Tools</h2>
+          <div class="tool-grid">
+            <button class="tool active" type="button" data-tool="select" title="Select and move">Select</button>
+            <button class="tool" type="button" data-tool="pan" title="Pan workspace">Pan</button>
+            <button class="tool" type="button" data-tool="rect">Rectangle</button>
+            <button class="tool" type="button" data-tool="ellipse">Ellipse</button>
+            <button class="tool" type="button" data-tool="diamond">Diamond</button>
+            <button class="tool" type="button" data-tool="text">Text</button>
+            <button class="tool" type="button" data-tool="connector">Connector</button>
+          </div>
+        </section>
+
+        <section class="properties">
+          <h2>Style</h2>
+          <label>
+            Fill
+            <input id="fillColor" type="color" value="#ffffff">
+          </label>
+          <label>
+            Stroke
+            <input id="strokeColor" type="color" value="#2563eb">
+          </label>
+          <label>
+            Text
+            <input id="textColor" type="color" value="#111827">
+          </label>
+          <label>
+            Stroke width
+            <input id="strokeWidth" type="range" min="1" max="12" value="2">
+            <span id="strokeWidthValue">2</span>
+          </label>
+          <label>
+            Font size
+            <input id="fontSize" type="range" min="10" max="64" value="16">
+            <span id="fontSizeValue">16</span>
+          </label>
+          <label>
+            Start arrow
+            <input id="arrowStart" type="checkbox">
+          </label>
+          <label>
+            End arrow
+            <input id="arrowEnd" type="checkbox" checked>
+          </label>
+        </section>
+
+        <section>
+          <h2>Selection</h2>
+          <div id="selectionInfo" class="selection-info">Nothing selected</div>
+          <label id="shapeTextField" class="shape-text-field" hidden>
+            Label
+            <textarea id="shapeTextInput" rows="4" placeholder="Shape label"></textarea>
+          </label>
+          <button id="deleteBtn" type="button">Delete selected</button>
+        </section>
+      </aside>
+
+      <main class="workspace-shell">
+        <div class="hintbar">
+          <span>Wheel zooms. Space or Pan drags the workspace. Select a shape to edit on the left, or double-click it to edit in place.</span>
+          <span id="zoomLabel">100%</span>
+        </div>
+        <div id="workspace" class="workspace" tabindex="0">
+          <svg id="diagram" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e5e7eb" stroke-width="1"></path>
+              </pattern>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto-start-reverse" markerUnits="strokeWidth">
+                <path d="M0,0 L0,6 L9,3 z" fill="context-stroke"></path>
+              </marker>
+            </defs>
+            <g id="viewport">
+              <rect class="grid-bg" x="-50000" y="-50000" width="100000" height="100000" fill="url(#grid)"></rect>
+              <g id="connectionsLayer"></g>
+              <g id="shapesLayer"></g>
+            </g>
+          </svg>
+        </div>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
