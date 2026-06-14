@@ -19,6 +19,7 @@ const els = {
   colorGrid: document.getElementById("colorGrid"),
   activeColorPreview: document.getElementById("activeColorPreview"),
   activeColorLabel: document.getElementById("activeColorLabel"),
+  transparentColorBtn: document.getElementById("transparentColorBtn"),
   arrowStart: document.getElementById("arrowStart"),
   arrowEnd: document.getElementById("arrowEnd"),
   selectionInfo: document.getElementById("selectionInfo"),
@@ -115,9 +116,11 @@ function setTool(nextTool) {
 }
 
 function currentColorValue() {
-  if (activeColorTarget === "fill") return els.fillColor.value;
-  if (activeColorTarget === "stroke") return els.strokeColor.value;
-  return els.textColor.value;
+  const target = selected?.type === "shape" ? findShape(selected.id) : selected?.type === "connection" ? findConnection(selected.id) : null;
+  const style = target?.style || defaultStyle;
+  if (activeColorTarget === "fill") return style.fill ?? defaultStyle.fill;
+  if (activeColorTarget === "stroke") return style.stroke ?? defaultStyle.stroke;
+  return style.text ?? defaultStyle.text;
 }
 
 function setActiveColorTarget(target) {
@@ -145,7 +148,7 @@ function patchForColorTarget(target, color) {
 }
 
 function applyColor(target, color) {
-  colorInputForTarget(target).value = color;
+  if (color !== "transparent") colorInputForTarget(target).value = color;
   updateSelectedStyle(patchForColorTarget(target, color));
   renderPaletteState();
 }
@@ -165,8 +168,9 @@ function renderPalette() {
 
 function renderPaletteState() {
   const color = currentColorValue();
-  els.activeColorPreview.style.background = color;
-  els.activeColorLabel.textContent = color.toUpperCase();
+  els.activeColorPreview.classList.toggle("transparent-preview", color === "transparent");
+  els.activeColorPreview.style.background = color === "transparent" ? "" : color;
+  els.activeColorLabel.textContent = color === "transparent" ? "TRANSPARENT" : color.toUpperCase();
   els.colorGrid.querySelectorAll(".swatch").forEach((button) => {
     button.classList.toggle("active", button.dataset.color.toLowerCase() === color.toLowerCase());
   });
@@ -556,9 +560,9 @@ function setSelectedShapeIds(ids) {
 function syncStyleControls() {
   const target = selected?.type === "shape" ? findShape(selected.id) : selected?.type === "connection" ? findConnection(selected.id) : null;
   const style = target?.style || defaultStyle;
-  els.fillColor.value = style.fill || defaultStyle.fill;
-  els.strokeColor.value = style.stroke || defaultStyle.stroke;
-  els.textColor.value = style.text || defaultStyle.text;
+  if ((style.fill ?? defaultStyle.fill) !== "transparent") els.fillColor.value = style.fill ?? defaultStyle.fill;
+  if ((style.stroke ?? defaultStyle.stroke) !== "transparent") els.strokeColor.value = style.stroke ?? defaultStyle.stroke;
+  if ((style.text ?? defaultStyle.text) !== "transparent") els.textColor.value = style.text ?? defaultStyle.text;
   els.strokeWidth.value = style.strokeWidth || defaultStyle.strokeWidth;
   els.strokeWidthValue.textContent = els.strokeWidth.value;
   els.fontSize.value = style.fontSize || defaultStyle.fontSize;
@@ -1063,6 +1067,7 @@ els.colorGrid.addEventListener("click", (event) => {
   if (!swatch) return;
   applyColor(activeColorTarget, swatch.dataset.color);
 });
+els.transparentColorBtn.addEventListener("click", () => applyColor(activeColorTarget, "transparent"));
 
 els.workspace.addEventListener("pointerdown", onPointerDown);
 els.workspace.addEventListener("pointermove", onPointerMove);
