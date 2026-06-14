@@ -63,7 +63,7 @@ const paletteColors = [
   "#cffafe", "#a5f3fc", "#22d3ee", "#06b6d4", "#0891b2", "#0e7490", "#155e75", "#083344",
   "#dbeafe", "#bfdbfe", "#60a5fa", "#3b82f6", "#2563eb", "#1d4ed8", "#1e40af", "#172554",
   "#ede9fe", "#ddd6fe", "#a78bfa", "#8b5cf6", "#7c3aed", "#6d28d9", "#5b21b6", "#2e1065",
-  "#fce7f3", "#fbcfe8", "#f472b6", "#ec4899", "#db2777", "#be185d", "#9d174d", "#500724",
+  "#fce7f3", "#fbcfe8", "#f472b6", "#ec4899", "#db2777", "#be185d", "#9d174d", "#831843",
 ];
 
 function uid(prefix) {
