@@ -47,26 +47,31 @@
 
         <section class="properties">
           <h2>Style</h2>
-          <div class="color-tabs" role="group" aria-label="Color target">
-            <button id="fillColorTab" class="color-tab active" type="button" data-color-target="fill">Fill</button>
-            <button id="strokeColorTab" class="color-tab" type="button" data-color-target="stroke">Stroke</button>
-            <button id="textColorTab" class="color-tab" type="button" data-color-target="text">Text</button>
+          <div class="color-swatches">
+            <button class="color-swatch-btn" type="button" data-color-target="fill" title="Fill color">
+              <span class="color-indicator fill-indicator" id="fillPreview"></span>
+              <span>Fill</span>
+            </button>
+            <button class="color-swatch-btn" type="button" data-color-target="stroke" title="Stroke color">
+              <span class="color-indicator stroke-indicator" id="strokePreview"></span>
+              <span>Stroke</span>
+            </button>
+            <button class="color-swatch-btn" type="button" data-color-target="text" title="Text color">
+              <span class="color-indicator text-indicator" id="textPreview">A</span>
+              <span>Text</span>
+            </button>
           </div>
-          <div class="color-picker">
-            <div id="activeColorPreview" class="active-color-preview" aria-hidden="true"></div>
-            <div>
-              <div id="colorGrid" class="color-grid" aria-label="Color palette"></div>
-              <div class="system-color-row">
-                <span id="activeColorLabel">#ffffff</span>
-                <div class="color-actions">
-                  <button id="transparentColorBtn" type="button" class="system-color-button">Transparent</button>
-                  <label class="system-color-button">
-                    System
-                    <input id="fillColor" type="color" value="#ffffff">
-                    <input id="strokeColor" type="color" value="#2563eb">
-                    <input id="textColor" type="color" value="#111827">
-                  </label>
-                </div>
+          <div id="colorPalette" class="color-palette" hidden>
+            <div id="colorGrid" class="color-grid" aria-label="Color palette"></div>
+            <div class="system-color-row">
+              <span id="activeColorLabel">#ffffff</span>
+              <div class="color-actions">
+                <label class="system-color-button">
+                  System
+                  <input id="fillColor" type="color" value="#ffffff">
+                  <input id="strokeColor" type="color" value="#2563eb">
+                  <input id="textColor" type="color" value="#111827">
+                </label>
               </div>
             </div>
           </div>

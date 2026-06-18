@@ -17,9 +17,11 @@ const els = {
   fontSize: document.getElementById("fontSize"),
   fontSizeValue: document.getElementById("fontSizeValue"),
   colorGrid: document.getElementById("colorGrid"),
-  activeColorPreview: document.getElementById("activeColorPreview"),
+  colorPalette: document.getElementById("colorPalette"),
+  fillPreview: document.getElementById("fillPreview"),
+  strokePreview: document.getElementById("strokePreview"),
+  textPreview: document.getElementById("textPreview"),
   activeColorLabel: document.getElementById("activeColorLabel"),
-  transparentColorBtn: document.getElementById("transparentColorBtn"),
   arrowStart: document.getElementById("arrowStart"),
   arrowEnd: document.getElementById("arrowEnd"),
   selectionInfo: document.getElementById("selectionInfo"),
@@ -53,9 +55,10 @@ let draftConnection = null;
 let editingShapeId = null;
 let lastShapeClick = { id: null, time: 0 };
 let activeColorTarget = "fill";
+let paletteOpen = false;
 
 const paletteColors = [
-  "#ffffff", "#f8fafc", "#e5e7eb", "#9ca3af", "#6b7280", "#4b5563", "#111827", "#000000",
+  "transparent", "#f8fafc", "#e5e7eb", "#9ca3af", "#6b7280", "#4b5563", "#111827", "#000000",
   "#fee2e2", "#fecaca", "#f87171", "#ef4444", "#dc2626", "#991b1b", "#7f1d1d", "#450a0a",
   "#ffedd5", "#fed7aa", "#fb923c", "#f97316", "#ea580c", "#c2410c", "#9a3412", "#431407",
   "#fef3c7", "#fde68a", "#facc15", "#eab308", "#ca8a04", "#a16207", "#854d0e", "#422006",
@@ -115,23 +118,39 @@ function setTool(nextTool) {
   render();
 }
 
-function currentColorValue() {
-  const target = selected?.type === "shape" ? findShape(selected.id) : selected?.type === "connection" ? findConnection(selected.id) : null;
-  const style = target?.style || defaultStyle;
-  if (activeColorTarget === "fill") return style.fill ?? defaultStyle.fill;
-  if (activeColorTarget === "stroke") return style.stroke ?? defaultStyle.stroke;
+function colorValueForTarget(target) {
+  const obj = selected?.type === "shape" ? findShape(selected.id) : selected?.type === "connection" ? findConnection(selected.id) : null;
+  const style = obj?.style || defaultStyle;
+  if (target === "fill") return style.fill ?? defaultStyle.fill;
+  if (target === "stroke") return style.stroke ?? defaultStyle.stroke;
   return style.text ?? defaultStyle.text;
 }
 
-function setActiveColorTarget(target) {
-  activeColorTarget = target;
-  document.querySelectorAll(".color-tab").forEach((button) => {
-    button.classList.toggle("active", button.dataset.colorTarget === activeColorTarget);
+function currentColorValue() {
+  return colorValueForTarget(activeColorTarget);
+}
+
+function togglePaletteFor(target) {
+  if (activeColorTarget === target && paletteOpen) {
+    paletteOpen = false;
+  } else {
+    activeColorTarget = target;
+    paletteOpen = true;
+  }
+  renderColorUI();
+}
+
+function renderColorUI() {
+  document.querySelectorAll(".color-swatch-btn").forEach((button) => {
+    button.classList.toggle("active", button.dataset.colorTarget === activeColorTarget && paletteOpen);
   });
+  els.colorPalette.hidden = !paletteOpen;
   [els.fillColor, els.strokeColor, els.textColor].forEach((input) => {
     input.classList.remove("active-system-color");
   });
-  colorInputForTarget(activeColorTarget).classList.add("active-system-color");
+  if (paletteOpen) {
+    colorInputForTarget(activeColorTarget).classList.add("active-system-color");
+  }
   renderPaletteState();
 }
 
@@ -157,19 +176,30 @@ function renderPalette() {
   els.colorGrid.replaceChildren(...paletteColors.map((color) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "swatch";
+    button.className = color === "transparent" ? "swatch swatch-transparent" : "swatch";
     button.dataset.color = color;
-    button.title = color;
-    button.style.background = color;
+    button.title = color === "transparent" ? "Transparent" : color;
+    if (color !== "transparent") button.style.background = color;
     return button;
   }));
   renderPaletteState();
 }
 
 function renderPaletteState() {
+  ["fill", "stroke", "text"].forEach((target) => {
+    const color = colorValueForTarget(target);
+    const el = els[target + "Preview"];
+    const isTransparent = color === "transparent";
+    el.classList.toggle("is-transparent", isTransparent);
+    if (target === "fill") {
+      el.style.background = isTransparent ? "" : color;
+    } else if (target === "stroke") {
+      el.style.borderColor = isTransparent ? "" : color;
+    } else {
+      el.style.color = isTransparent ? "" : color;
+    }
+  });
   const color = currentColorValue();
-  els.activeColorPreview.classList.toggle("transparent-preview", color === "transparent");
-  els.activeColorPreview.style.background = color === "transparent" ? "" : color;
   els.activeColorLabel.textContent = color === "transparent" ? "TRANSPARENT" : color.toUpperCase();
   els.colorGrid.querySelectorAll(".swatch").forEach((button) => {
     button.classList.toggle("active", button.dataset.color.toLowerCase() === color.toLowerCase());
@@ -1071,8 +1101,8 @@ document.querySelectorAll(".tool").forEach((button) => {
   button.addEventListener("click", () => setTool(button.dataset.tool));
 });
 
-document.querySelectorAll(".color-tab").forEach((button) => {
-  button.addEventListener("click", () => setActiveColorTarget(button.dataset.colorTarget));
+document.querySelectorAll(".color-swatch-btn").forEach((button) => {
+  button.addEventListener("click", () => togglePaletteFor(button.dataset.colorTarget));
 });
 
 els.colorGrid.addEventListener("click", (event) => {
@@ -1080,8 +1110,6 @@ els.colorGrid.addEventListener("click", (event) => {
   if (!swatch) return;
   applyColor(activeColorTarget, swatch.dataset.color);
 });
-els.transparentColorBtn.addEventListener("click", () => applyColor(activeColorTarget, "transparent"));
-
 els.workspace.addEventListener("pointerdown", onPointerDown);
 els.workspace.addEventListener("pointermove", onPointerMove);
 els.workspace.addEventListener("pointerup", onPointerUp);
@@ -1185,5 +1213,4 @@ window.addEventListener("blur", () => {
 window.addEventListener("resize", render);
 
 renderPalette();
-setActiveColorTarget("fill");
 render();
