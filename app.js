@@ -236,6 +236,10 @@ function render() {
   renderShapes();
   syncStyleControls();
   renderSelectionInfo();
+  if (editingShapeId) {
+    const editor = els.shapesLayer.querySelector(`.shape-inline-editor[data-shape-id="${CSS.escape(editingShapeId)}"]`);
+    if (editor && document.activeElement !== editor) editor.focus();
+  }
 }
 
 function renderDocs() {
@@ -344,6 +348,7 @@ function createShapeEditor(shape) {
   textarea.addEventListener("pointerdown", (event) => event.stopPropagation());
   textarea.addEventListener("click", (event) => event.stopPropagation());
   textarea.addEventListener("dblclick", (event) => event.stopPropagation());
+  textarea.addEventListener("wheel", (event) => event.stopPropagation());
   textarea.addEventListener("input", updateInlineTextEditor);
   textarea.addEventListener("keydown", (event) => {
     event.stopPropagation();
@@ -703,6 +708,7 @@ function cancelDraftConnection() {
 }
 
 function onPointerDown(event) {
+  if (event.button !== 0 && event.button !== 1) return;
   const shapeNode = event.target.closest?.(".shape-node");
   const connectionNode = event.target.closest?.(".connection-node, .connection-line, .connection-hit");
   const now = Date.now();
@@ -755,8 +761,15 @@ function onPointerDown(event) {
 
   if (shapeNode) {
     const id = shapeNode.dataset.id;
-    if (!selectedShapeIds.includes(id)) {
-      setSelectedShapeIds(event.shiftKey ? [...selectedShapeIds, id] : [id]);
+    if (event.shiftKey) {
+      if (selectedShapeIds.includes(id)) {
+        setSelectedShapeIds(selectedShapeIds.filter(sid => sid !== id));
+        render();
+        return;
+      }
+      setSelectedShapeIds([...selectedShapeIds, id]);
+    } else if (!selectedShapeIds.includes(id)) {
+      setSelectedShapeIds([id]);
     }
     const shape = findShape(id);
     const resize = event.target.dataset.handle === "resize";
@@ -1142,7 +1155,7 @@ els.arrowStart.addEventListener("change", () => updateArrowStyle({ arrowStart: e
 els.arrowEnd.addEventListener("change", () => updateArrowStyle({ arrowEnd: els.arrowEnd.checked }));
 
 window.addEventListener("keydown", (event) => {
-  if (event.target.closest?.(".shape-inline-editor") || event.target === els.docTitle || event.target === els.shapeTextInput) return;
+  if (event.target.matches?.("input, textarea, select, [contenteditable]")) return;
   if (event.code === "Space") {
     spaceDown = true;
     els.workspace.classList.add("is-panning");
@@ -1151,6 +1164,7 @@ window.addEventListener("keydown", (event) => {
   if (event.key === "Delete" || event.key === "Backspace") {
     deleteSelected();
   }
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
   if (event.key === "v") setTool("select");
   if (event.key === "h") setTool("pan");
   if (event.key === "c") setTool("connector");
@@ -1161,6 +1175,11 @@ window.addEventListener("keyup", (event) => {
     spaceDown = false;
     els.workspace.classList.remove("is-panning");
   }
+});
+
+window.addEventListener("blur", () => {
+  spaceDown = false;
+  els.workspace.classList.remove("is-panning");
 });
 
 window.addEventListener("resize", render);
